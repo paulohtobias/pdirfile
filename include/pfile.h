@@ -18,7 +18,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <time.h>
-//#include <str-utils.h> // Used here for unicode conversions. This line can be safely removed.
+#include <str-utils.h> // Used here for unicode conversions. This line can be safely removed.
 
 // OS specific headers.
 #if defined(_WIN32) || defined(_WIN64)
@@ -65,6 +65,13 @@ const char *pfile_get_filename(const pfile_t *file);
 time_t pfile_get_last_mod_time(const pfile_t *file);
 
 bool pfile_is_dir(const pfile_t *file);
+
+
+int pfile_cmp_path(const void *f1, const void *f2);
+
+int pfile_cmp_filename(const void *f1, const void *f2);
+
+int pfile_cmp_time(const void *f1, const void *f2);
 
 
 #if (defined(_WIN32) || defined(_WIN64))

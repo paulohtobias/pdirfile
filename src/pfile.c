@@ -9,25 +9,6 @@
 
 #include "pfile.h"
 
-#if !defined(STR_UTILS_H) && (defined(_WIN32) || defined(_WIN64))
-char *pfile_utf16_to_utf8(const wchar_t *utf16_str, int size) {
-	int utf8_str_len = WideCharToMultiByte(CP_UTF8, P_FILE_UTF_FLAGS, utf16_str, size, NULL, 0, NULL, NULL);
-	char *utf8_str = malloc(utf8_str_len);
-	WideCharToMultiByte(CP_UTF8, P_FILE_UTF_FLAGS, utf16_str, size, utf8_str, utf8_str_len, NULL, NULL);
-
-	return utf8_str;
-}
-
-wchar_t *pfile_utf8_to_utf16(const char *utf8_str, int size) {
-	int utf16_str_len = MultiByteToWideChar(CP_UTF8, P_FILE_UTF_FLAGS, utf8_str, -1, NULL, 0);
-	wchar_t *utf16_str = malloc(utf16_str_len * sizeof(wchar_t));
-    MultiByteToWideChar(CP_UTF8, P_FILE_UTF_FLAGS, utf8_str, -1, utf16_str, utf16_str_len);
-
-	return utf16_str;
-}
-#endif // !STR_UTILS_H && (_WIN32 || _WIN64)
-
-
 int pfile_init(pfile_t *file, const char *path) {
 	memset(file, 0, sizeof *file);
 
@@ -94,7 +75,6 @@ int pfile_init(pfile_t *file, const char *path) {
 	file->last_mod_time = sb.st_mtime;
 #endif // _WIN32 || _WIN64
 
-
 	return 0;
 }
 
@@ -144,3 +124,51 @@ time_t pfile_get_last_mod_time(const pfile_t *file) {
 bool pfile_is_dir(const pfile_t *file) {
 	return file->is_dir;
 }
+
+
+int pfile_cmp_path(const void *f1, const void *f2) {
+#ifdef STR_UTILS_H
+	return strcmpn(((const pfile_t *) f1)->path, ((const pfile_t *) f2)->path);
+#else
+	return strcasecmp(((const pfile_t *) f1)->path, ((const pfile_t *) f2)->path);
+#endif
+}
+
+int pfile_cmp_filename(const void *f1, const void *f2) {
+#ifdef STR_UTILS_H
+	return strcmpn(((const pfile_t *) f1)->filename, ((const pfile_t *) f2)->filename);
+#else
+	return strcasecmp(((const pfile_t *) f1)->filename, ((const pfile_t *) f2)->filename);
+#endif
+}
+
+int pfile_cmp_time(const void *f1, const void *f2) {
+	time_t t1 = ((const pfile_t *) f1)->last_mod_time;
+	time_t t2 = ((const pfile_t *) f2)->last_mod_time;
+
+	if (t1 < t2) {
+		return -1;
+	} else if (t2 > t1) {
+		return 1;
+	}
+	return 0;
+}
+
+
+#if !defined(STR_UTILS_H) && (defined(_WIN32) || defined(_WIN64))
+char *pfile_utf16_to_utf8(const wchar_t *utf16_str, int size) {
+	int utf8_str_len = WideCharToMultiByte(CP_UTF8, P_FILE_UTF_FLAGS, utf16_str, size, NULL, 0, NULL, NULL);
+	char *utf8_str = malloc(utf8_str_len);
+	WideCharToMultiByte(CP_UTF8, P_FILE_UTF_FLAGS, utf16_str, size, utf8_str, utf8_str_len, NULL, NULL);
+
+	return utf8_str;
+}
+
+wchar_t *pfile_utf8_to_utf16(const char *utf8_str, int size) {
+	int utf16_str_len = MultiByteToWideChar(CP_UTF8, P_FILE_UTF_FLAGS, utf8_str, -1, NULL, 0);
+	wchar_t *utf16_str = malloc(utf16_str_len * sizeof(wchar_t));
+    MultiByteToWideChar(CP_UTF8, P_FILE_UTF_FLAGS, utf8_str, -1, utf16_str, utf16_str_len);
+
+	return utf16_str;
+}
+#endif // !STR_UTILS_H && (_WIN32 || _WIN64)

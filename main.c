@@ -21,14 +21,16 @@ int main(int argc, char *argv[]) {
 
 	size_t files_len;
 	pfile_t *files = dir_get_files(dir, &files_len, 0, NULL, NULL);
+	qsort(files, files_len, sizeof *files, pfile_cmp_filename);
 
 	size_t i;
 	for (i = 0; i < files_len; i++) {
-		printf("PATH: '%s'\nNAME: '%s'\nIs Dir? %d\n", pfile_get_path(files + i), pfile_get_filename(files + i), pfile_is_dir(files + i));
 		char tstr[50];
 		struct tm *tmp = localtime(&files[i].last_mod_time);
 		strftime(tstr, sizeof tstr, "%Y-%m-%d %H:%M:%S", tmp);
-		printf("%s\n\n", tstr);
+		//printf("PATH: '%s'\nNAME: '%s'\nIs Dir? %d\n", pfile_get_path(files + i), pfile_get_filename(files + i), pfile_is_dir(files + i));
+		//printf("%s\n\n", tstr);
+		printf("'%s'\n", pfile_get_filename(files + i));
 	}
 
 	return 0;

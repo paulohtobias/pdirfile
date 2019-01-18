@@ -106,19 +106,19 @@ pfile_t *dir_get_files(const char *path, size_t *files_matched, int flags, const
 
 		// Checking if no file was found.
 		if (GetLastError() != ERROR_NO_MORE_FILES || *files_matched == 0) {
-			free(dir);
-			free(wdir);
+			free(dirname);
+			free(wdirname);
 			FindClose(hFind);
 			return NULL;
 		}
 
 		FindClose(hFind);
-		hFind = FindFirstFileW(wdir, &ffd);
+		hFind = FindFirstFileW(wdirname, &ffd);
 
 		// Error checking
 		if (hFind == INVALID_HANDLE_VALUE) {
-			free(dir);
-			free(wdir);
+			free(dirname);
+			free(wdirname);
 			return NULL;
 		}
 #else
@@ -149,7 +149,7 @@ pfile_t *dir_get_files(const char *path, size_t *files_matched, int flags, const
 	do {
 		char *fname = pfile_utf16_to_utf8(ffd.cFileName, -1);
 		if (dir_get_files_match(fname, flags, pattern, match_function)) {
-			char *fpath = dir_get_full_path(dir, dir_len, fname, 0);
+			char *fpath = dir_get_full_path(dirname, dirname_len, fname, 0);
 			if (pfile_init(files + i, fpath) == 0) {
 				//In case the flag DONT_COUNT_FILES was set.
 				if(i + 1 == *files_matched){
@@ -166,8 +166,8 @@ pfile_t *dir_get_files(const char *path, size_t *files_matched, int flags, const
 
 	// Checking if no file was found.
 	if (GetLastError() != ERROR_NO_MORE_FILES || *files_matched == 0) {
-		free(dir);
-		free(wdir);
+		free(dirname);
+		free(wdirname);
 		return NULL;
 	}
 
