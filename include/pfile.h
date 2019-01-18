@@ -53,6 +53,8 @@ int pfile_init_windows(pfile_t *file, const char *path, const WIN32_FIND_DATAW *
 
 void pfile_release(pfile_t *file);
 
+void pfile_free_list(pfile_t *files, size_t files_len);
+
 int pfile_open_path(const char *path, const char *application);
 
 int pfile_open(const pfile_t *file, const char *application);

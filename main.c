@@ -12,6 +12,17 @@
 
 int main(int argc, char *argv[]) {
 	char dir[2048];
+	readstr("dir", dir, 1);
+
+	if (dir_create(dir, PDIR_C_REC) == 0) {
+		puts("success!!\n");
+	}
+
+	return 0;
+}
+
+int main_list(int argc, char *argv[]) {
+	char dir[2048];
 
 	//D:\Paulo\Workspace\C\dirfile\tests
 

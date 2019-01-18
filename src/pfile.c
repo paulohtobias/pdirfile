@@ -89,6 +89,13 @@ void pfile_release(pfile_t *file) {
 	free(file->filename);
 }
 
+void pfile_free_list(pfile_t *files, size_t files_len) {
+	for (size_t i = 0; i < files_len; i++) {
+		pfile_release(files + i);
+	}
+	free(files);
+}
+
 int pfile_open_path(const char *path, const char *application) {
 	size_t path_len = strlen(path);
 	size_t command_len = path_len + 30;
