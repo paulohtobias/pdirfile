@@ -34,6 +34,7 @@ int main(int argc, char *argv[]) {
 	return 0;
 }
 
+#if defined(_WIN32) || defined (_WIN64)
 int main2(int argc, char const *argv[]) {
 	char dir[2048];
 
@@ -84,3 +85,4 @@ int main2(int argc, char const *argv[]) {
 	FindClose(hFind);
 	return 0;
 }
+#endif

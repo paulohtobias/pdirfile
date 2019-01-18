@@ -42,43 +42,50 @@ int dir_get_files_match(const char *filename, int flags, const char *pattern, in
 pfile_t *dir_get_files(const char *path, size_t *files_matched, int flags, const char *pattern, int (*match_function)(const char *, const char *)) {
 	*files_matched = 0;
 
+	char *dirname = NULL;
+	size_t dirname_len = 0;
+	dirname_len = str_copy(&dirname, path) - 1;
+
 #if defined(_WIN32) || defined (_WIN32)
 	WIN32_FIND_DATA ffd;
 	HANDLE hFind = INVALID_HANDLE_VALUE;
 
 	// To use FindFirstFileW we need to use the wildcard '*' at the end of the path
-	char *dir = NULL;
-	size_t dir_len = str_copy(&dir, path) - 1;
-	if (dir[dir_len - 1] != '/' || dir[dir_len - 1] != '\\') {
-		char dir_suffix[3] = {PFILE_PATH_SEPARATOR, '*', '\0'};
-		dir_len = str_append(&dir, dir_suffix) - 1;
+	if (dirname[dirname_len - 1] != '/' || dirname[dirname_len - 1] != '\\') {
+		char dirname_suffix[3] = {PFILE_PATH_SEPARATOR, '*', '\0'};
+		dirname_len = str_append(&dirname, dirname_suffix) - 1;
 	} else {
-		char dir_suffix[2] = {'*', '\0'};
-		dir_len = str_append(&dir, dir_suffix) - 1;
+		char dirname_suffix[2] = {'*', '\0'};
+		dirname_len = str_append(&dirname, dirname_suffix) - 1;
 	}
 
 	// Converting from utf-8 to utf-16.
-	wchar_t *wdir = pfile_utf8_to_utf16(dir, dir_len + 1);
-	hFind = FindFirstFileW(wdir, &ffd);
+	wchar_t *wdirname = pfile_utf8_to_utf16(dirname, dirname_len + 1);
+	hFind = FindFirstFileW(wdirname, &ffd);
 
 	// Error checking
 	if (hFind == INVALID_HANDLE_VALUE) {
-		free(dir);
-		free(wdir);
+		free(dirname);
+		free(wdirname);
 		return NULL;
 	}
 
 	// Removing the wildcard '*'.
-	dir[dir_len - 1] = '\0';
+	dirname[dirname_len - 1] = '\0';
 #else
 	DIR *dip;
 	struct dirent *dir;
 
-	File *files = NULL;
-
 	dip = opendir(path);
-	if(dip == NULL){
+	if (dip == NULL) {
+		free(dirname);
 		return NULL;
+	}
+
+	// Appending a traiing slash to the path.
+	if (dirname[dirname_len - 1] != PFILE_PATH_SEPARATOR) {
+		char dirname_suffix[2] = {PFILE_PATH_SEPARATOR, '\0'};
+		dirname_len = str_append(&dirname, dirname_suffix) - 1;
 	}
 #endif // _WIN32 || _WIN64
 
@@ -116,7 +123,7 @@ pfile_t *dir_get_files(const char *path, size_t *files_matched, int flags, const
 		}
 #else
 		while ((dir = readdir(dip))) {
-			if (dir_get_files_match(dir->d_name, flags, pattern, pattern_function)) {
+			if (dir_get_files_match(dir->d_name, flags, pattern, match_function)) {
 				(*files_matched)++;
 			}
 		}
@@ -167,8 +174,8 @@ pfile_t *dir_get_files(const char *path, size_t *files_matched, int flags, const
 	FindClose(hFind);
 #else
 	while ((dir = readdir(dip))) {
-		if (dir_get_files_match(dir->d_name, pattern, pattern_function)) {
-			char *fpath = dir_get_full_path(dir, dir_len, fname, 0);
+		if (dir_get_files_match(dir->d_name, flags, pattern, match_function)) {
+			char *fpath = dir_get_full_path(dirname, dirname_len, dir->d_name, 0);
 			if (pfile_init(files + i, fpath) == 0) {
 			//In case the flag DONT_COUNT_FILES was set.
 				if(i + 1 == *files_matched){

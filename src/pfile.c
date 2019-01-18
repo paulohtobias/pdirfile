@@ -84,7 +84,7 @@ int pfile_init(pfile_t *file, const char *path) {
 	file->last_mod_time = (time_t) (ull.QuadPart / 10000000 - 11644473600LL);
 #else
 	struct stat sb;
-	if (_stat(file->path, &sb) != 0) {
+	if (stat(file->path, &sb) != 0) {
 		free(file->path);
 		free(file->filename);
 		return 1;
