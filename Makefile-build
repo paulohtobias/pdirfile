@@ -24,6 +24,7 @@ LIB_NAME := pdirfile
 ifeq ($(OS),Windows_NT)
 	BIN := main-$(TARGET).exe
 	DLE := dll
+	LOADLIBES := -municode
 else
 	BIN := main-$(TARGET).out
 	DLE := so
@@ -46,7 +47,7 @@ INCLUDE_PATHS := -I$(IDIR)
 # Libraries
 LIBS := str-utils
 CFLAGS += `pkg-config --cflags $(LIBS)`
-LOADLIBES := `pkg-config --libs $(LIBS)`
+LOADLIBES += `pkg-config --libs $(LIBS)`
 
 #Compilation line
 COMPILE := $(CC) $(CFLAGS) $(INCLUDE_PATHS)

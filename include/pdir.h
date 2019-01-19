@@ -14,13 +14,9 @@
 #include "pfile.h"
 
 // OS specific headers.
-#if defined(_WIN32) || defined(_WIN64)
-#define UNICODE
-#define _UNICODE
-#include <windows.h>
-#else
+#if !defined(_WIN32) && !defined(_WIN64)
 #include <dirent.h>
-#endif // _WIN32 || _WIN64
+#endif
 
 // Flags:
 #define PDIR_DONT_COUNT 1    // Array size will grow with realloc with new files found.

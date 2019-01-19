@@ -97,16 +97,72 @@ void pfile_free_list(pfile_t *files, size_t files_len) {
 }
 
 int pfile_open_path(const char *path, const char *application) {
+	size_t application_len = 30;
 	size_t path_len = strlen(path);
-	size_t command_len = path_len + 30;
 #if defined(_WIN32) || defined(_WIN64)
-	wchar_t command[command_len];
+	bool default_application;
+	if (application == NULL) {
+		application = "start \"\"";
+		default_application = true;
+	} else {
+		application_len = strlen(application);
+		default_application = false;
+	}
+	wchar_t *wapplication = pfile_utf8_to_utf16(application, -1);
 	wchar_t *wpath = pfile_utf8_to_utf16(path, path_len + 1);
-	_swprintf(command, L"start \"\" \"%s%s\"", wpath);
-	return _wsystem(command);
+
+	if (default_application) {
+		size_t command_len = path_len + application_len;
+		wchar_t command[command_len];
+		_swprintf(command, L"%s \"%s\"", wapplication, wpath);
+
+		wprintf(L"command: %ls\n", command);
+
+		free(wapplication);
+	free(wpath);
+		return _wsystem(command) == 0;
+	} else {
+		// additional information
+		STARTUPINFO si;     
+		PROCESS_INFORMATION pi;
+
+		// set the size of the structures
+		ZeroMemory( &si, sizeof(si) );
+		si.cb = sizeof(si);
+		ZeroMemory( &pi, sizeof(pi) );
+
+		// start the program up
+		int retval = CreateProcess(
+			wapplication,  // the path
+			wpath,         // Command line
+			NULL,          // Process handle not inheritable
+			NULL,          // Thread handle not inheritable
+			FALSE,         // Set handle inheritance to FALSE
+			0,             // No creation flags
+			NULL,          // Use parent's environment block
+			NULL,          // Use parent's starting directory 
+			&si,           // Pointer to STARTUPINFO structure
+			&pi            // Pointer to PROCESS_INFORMATION structure (removed extra parentheses)
+		);
+		// Close process and thread handles. 
+		CloseHandle( pi.hProcess );
+		CloseHandle( pi.hThread );
+
+		free(wapplication);
+		free(wpath);
+		return retval != 0;
+	}
 #else
+	if (application == NULL) {
+		application = "xdg-open";
+	} else {
+		application_len = strlen(application);
+	}
+
+	size_t command_len = path_len + application_len;
 	char command[command_len];
-	sprintf(command, "xdg-open \"%s\"", path);
+	// TODO: check if the qutoes will work even if not necessary.
+	sprintf(command, "\"%s\" \"%s\"", application, path);
 	return system(command);
 #endif // _WIN32 || _WIN64
 }

@@ -22,11 +22,17 @@
 
 // OS specific headers.
 #if defined(_WIN32) || defined(_WIN64)
-#define UNICODE
-#define _UNICODE
 #include <windows.h>
+ #ifndef UNICODE
+  #define UNICODE
+  #define _UNICODE
+ #else
+  #ifndef _UNICODE
+   #define _UNICODE
+  #endif
+ #endif
 #else
-#include <sys/stat.h>
+ #include <sys/stat.h>
 #endif // _WIN32 || _WIN64
 
 #ifndef PFILE_DONT_REPLACE_BACKSLASHES
