@@ -10,7 +10,7 @@
 		strcpy(buff, argv[alt]); \
 	}
 
-int main(int argc, char *argv[]) {
+int main_cdir(int argc, char *argv[]) {
 	char dir[2048];
 	readstr("dir", dir, 1);
 
@@ -21,7 +21,11 @@ int main(int argc, char *argv[]) {
 	return 0;
 }
 
-int main_list(int argc, char *argv[]) {
+#if defined(_WIN32) || defined(_WIN64)
+int wmain(int argc, char *argv[]) {
+#else
+int main(int argc, char *argv[]) {
+#endif // _WIN32 || _WIN64
 	char dir[2048];
 
 	//D:\Paulo\Workspace\C\dirfile\tests
@@ -39,9 +43,9 @@ int main_list(int argc, char *argv[]) {
 		char tstr[50];
 		struct tm *tmp = localtime(&files[i].last_mod_time);
 		strftime(tstr, sizeof tstr, "%Y-%m-%d %H:%M:%S", tmp);
-		//printf("PATH: '%s'\nNAME: '%s'\nIs Dir? %d\n", pfile_get_path(files + i), pfile_get_filename(files + i), pfile_is_dir(files + i));
-		//printf("%s\n\n", tstr);
-		printf("'%s'\n", pfile_get_filename(files + i));
+		printf("PATH: '%s'\nNAME: '%s'\nIs Dir? %d\n", pfile_get_path(files + i), pfile_get_filename(files + i), pfile_is_dir(files + i));
+		printf("%s\n\n", tstr);
+		//printf("'%s'\n", pfile_get_filename(files + i));
 	}
 
 	return 0;

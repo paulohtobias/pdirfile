@@ -1,5 +1,5 @@
 /**
- * Vault
+ * PDirFile
  *
  * pdir.h
  *
@@ -14,13 +14,13 @@
 #include "pfile.h"
 
 // OS specific headers.
-#if !defined(_WIN32) && !defined(_WIN64)
 #include <dirent.h>
+#if !defined(_WIN32) && !defined(_WIN64)
 #endif
 
 // Flags:
 #define PDIR_DONT_COUNT 1    // Array size will grow with realloc with new files found.
-#define PDRI_NULL_PATTERN 2  // Treat a NULL pattern as a match and don't call match_function.
+#define PDIR_NULL_PATTERN 2  // Treat a NULL pattern as a match and don't call match_function.
 #define PDIR_C_REC 4         // Create all non-existing directories within path.
 #define PDIR_C_EEXIST 8      // Treat an existing directory as an error.
 

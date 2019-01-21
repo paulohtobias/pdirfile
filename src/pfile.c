@@ -1,5 +1,5 @@
 /**
- * Vault
+ * PDirFile
  *
  * pfile.c
  *
@@ -40,32 +40,17 @@ int pfile_init(pfile_t *file, const char *path) {
 
 
 	// Getting modification time and type.
+
 #if (defined(_WIN32) || defined(_WIN64))
-	WIN32_FIND_DATA ffd;
-	HANDLE hFind = INVALID_HANDLE_VALUE;
-
+	struct _stat sb;
 	wchar_t *wpath = pfile_utf8_to_utf16(file->path, file->path_len + 1);
-	hFind = FindFirstFileW(wpath, &ffd);
-	free(wpath);
-
-	// Error checking.
-	if (hFind == INVALID_HANDLE_VALUE) {
-		printf("ERROR: FindFirstFileW\n");
-		return 1;
-	}
-
-	// If file is directory.
-	file->is_dir = (ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY);
-
-	// Last modification time.
-	ULARGE_INTEGER ull;
-	ull.LowPart = ffd.ftLastWriteTime.dwLowDateTime;
-	ull.HighPart = ffd.ftLastWriteTime.dwHighDateTime;
-
-	file->last_mod_time = (time_t) (ull.QuadPart / 10000000 - 11644473600LL);
+	#define stat(pathname, statbuf) _wstat(w ## pathname, statbuf)
+	#define return free(wpath); return
 #else
 	struct stat sb;
-	if (stat(file->path, &sb) != 0) {
+#endif // _WIN32 || _WIN64
+
+	if (stat(path, &sb) != 0) {
 		free(file->path);
 		free(file->filename);
 		return 1;
@@ -73,16 +58,13 @@ int pfile_init(pfile_t *file, const char *path) {
 
 	file->is_dir = S_ISDIR(sb.st_mode);
 	file->last_mod_time = sb.st_mtime;
-#endif // _WIN32 || _WIN64
 
 	return 0;
-}
 
-#if defined(_WIN32) || defined(_WIN64)
-int pfile_init_windows(pfile_t *file, const char *path, const WIN32_FIND_DATAW *ffd) {
-	return 1;
-}
+#if (defined(_WIN32) || defined(_WIN64))
+	#undef return
 #endif // _WIN32 || _WIN64
+}
 
 void pfile_release(pfile_t *file) {
 	free(file->path);
@@ -116,14 +98,12 @@ int pfile_open_path(const char *path, const char *application) {
 		wchar_t command[command_len];
 		_swprintf(command, L"%s \"%s\"", wapplication, wpath);
 
-		wprintf(L"command: %ls\n", command);
-
 		free(wapplication);
 	free(wpath);
 		return _wsystem(command) == 0;
 	} else {
 		// additional information
-		STARTUPINFO si;     
+		STARTUPINFOW si;
 		PROCESS_INFORMATION pi;
 
 		// set the size of the structures
@@ -132,7 +112,7 @@ int pfile_open_path(const char *path, const char *application) {
 		ZeroMemory( &pi, sizeof(pi) );
 
 		// start the program up
-		int retval = CreateProcess(
+		int retval = CreateProcessW(
 			wapplication,  // the path
 			wpath,         // Command line
 			NULL,          // Process handle not inheritable
@@ -140,13 +120,13 @@ int pfile_open_path(const char *path, const char *application) {
 			FALSE,         // Set handle inheritance to FALSE
 			0,             // No creation flags
 			NULL,          // Use parent's environment block
-			NULL,          // Use parent's starting directory 
+			NULL,          // Use parent's starting directory
 			&si,           // Pointer to STARTUPINFO structure
 			&pi            // Pointer to PROCESS_INFORMATION structure (removed extra parentheses)
 		);
-		// Close process and thread handles. 
-		CloseHandle( pi.hProcess );
-		CloseHandle( pi.hThread );
+		// Close process and thread handles.
+		CloseHandle(pi.hProcess);
+		CloseHandle(pi.hThread);
 
 		free(wapplication);
 		free(wpath);
@@ -161,9 +141,8 @@ int pfile_open_path(const char *path, const char *application) {
 
 	size_t command_len = path_len + application_len;
 	char command[command_len];
-	// TODO: check if the qutoes will work even if not necessary.
 	sprintf(command, "\"%s\" \"%s\"", application, path);
-	return system(command);
+	return system(command) == 0;
 #endif // _WIN32 || _WIN64
 }
 
@@ -210,9 +189,9 @@ int pfile_cmp_time(const void *f1, const void *f2) {
 	time_t t2 = ((const pfile_t *) f2)->last_mod_time;
 
 	if (t1 < t2) {
-		return -1;
-	} else if (t2 > t1) {
 		return 1;
+	} else if (t2 > t1) {
+		return -1;
 	}
 	return 0;
 }

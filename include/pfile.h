@@ -1,5 +1,5 @@
 /**
- * Vault
+ * PDirFile
  *
  * pfile.h
  *
@@ -32,8 +32,9 @@
   #endif
  #endif
 #else
- #include <sys/stat.h>
 #endif // _WIN32 || _WIN64
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #ifndef PFILE_DONT_REPLACE_BACKSLASHES
 #define PFILE_PATH_SEPARATOR '/'
@@ -52,10 +53,6 @@ typedef struct pfile_t {
 
 
 int pfile_init(pfile_t *file, const char *path);
-
-#if defined(_WIN32) || defined(_WIN64)
-int pfile_init_windows(pfile_t *file, const char *path, const WIN32_FIND_DATAW *ffd);
-#endif // _WIN32 || _WIN64
 
 void pfile_release(pfile_t *file);
 
